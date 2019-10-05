@@ -14,6 +14,7 @@ let categoryExtensions = [
     {id: "pkmngen5ext", names: {international: "Pokémon BW/B2W2Category Extensions"}, abbreviation: "pkmngen5ext", weblink: "https://www.speedrun.com/pkmngen5ext"},
     {id: "pkmngen6ext", names: {international: "Pokémon XY/ORAS Category Extensions"}, abbreviation: "pkmngen6ext", weblink: "https://www.speedrun.com/pkmngen6ext"},
     {id: "pkmngen7ext", names: {international: "Pokémon SM/USUM/LGPE Category Extensions"}, abbreviation: "pkmngen7ext", weblink: "https://www.speedrun.com/pkmngen7ext"},
+    {id: "pmdextensions", names: {international: "Pokémon Mystery Dungeon Category Extensions"}, abbreviation: "pkmngen7ext", weblink: "https://www.speedrun.com/pmdextensions"},
 ];
 
 let gamesWithEmulatorHidden = [
@@ -483,7 +484,7 @@ try {
                 html+= "</tr>\n";
             }
         }
-        html+= "</tbody></table>";
+        html+= "</tbody></table></body></html>";
     }
 
 
