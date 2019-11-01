@@ -1,7 +1,12 @@
 
 // Format: YEAR, MONTH, DAY, (HOUR, MINUTE, SECOND)
 // Remember: MONTH starts at 0 for January!
-let dateLimit = new Date(2019, 8, 6);
+let dateLimit = new Date(2019, 9, 5);
+
+// PMD Category extensions take forever to load.
+// Set this to "true" or "false" to enable or disable loading those.
+let includePmdCategoryExtensions = false;
+
 
 
 let mainSeriesUrl = "https://www.speedrun.com/api/v1/series/pokemon/games?_bulk=yes&orderby=released";
@@ -14,8 +19,15 @@ let categoryExtensions = [
     {id: "pkmngen5ext", names: {international: "Pokémon BW/B2W2Category Extensions"}, abbreviation: "pkmngen5ext", weblink: "https://www.speedrun.com/pkmngen5ext"},
     {id: "pkmngen6ext", names: {international: "Pokémon XY/ORAS Category Extensions"}, abbreviation: "pkmngen6ext", weblink: "https://www.speedrun.com/pkmngen6ext"},
     {id: "pkmngen7ext", names: {international: "Pokémon SM/USUM/LGPE Category Extensions"}, abbreviation: "pkmngen7ext", weblink: "https://www.speedrun.com/pkmngen7ext"},
-    {id: "pmdextensions", names: {international: "Pokémon Mystery Dungeon Category Extensions"}, abbreviation: "pkmngen7ext", weblink: "https://www.speedrun.com/pmdextensions"},
 ];
+
+
+if (includePmdCategoryExtensions) {
+    console.log("PMD category extensions will be included. This may take a while!");
+    categoryExtensions.push({id: "pmdextensions", names: {international: "Pokémon Mystery Dungeon Category Extensions"}, abbreviation: "pkmngen7ext", weblink: "https://www.speedrun.com/pmdextensions"});
+} else {
+    console.log("PMD category extensions will NOT be included.");
+}
 
 let gamesWithEmulatorHidden = [
     "yd4qeg6e", // Pocket Monsters Stadium
@@ -169,6 +181,38 @@ function formatToDateTime(dateString) {
     });
 }
 
+async function loadRunRunners(run) {
+    let runRunners = [];
+
+    for (const player of run.run.players) {
+
+        if (player.rel === "guest") {
+
+            runRunners.push({
+                type: "guest",
+                names: {
+                    international: player.name,
+                }
+            });
+
+        } else {
+            if (!runners[player.id]) {
+                runners[player.id] = (await enqueueRequest(player.uri)).data;
+
+                console.log("Retrieved runner data: " + runners[player.id].names.international);
+
+            } else {
+                console.log("Backed up runner data: " + runners[player.id].names.international);
+
+            }
+
+            runRunners.push(runners[player.id]);
+        }
+    }
+
+    return runRunners;
+}
+
 handleNextRequest();
 
 let results = {};
@@ -201,6 +245,8 @@ try {
     console.log("Loaded " + fanGames.length + " games from Pokémon Fan Games series.");
 
     games = games.concat(fanGames);
+
+    let categoryInfo = {};
 
     for (let game of games) {
 
@@ -267,6 +313,12 @@ try {
 
             for (let url of urlList) {
 
+                categoryInfo[game.names.international] = categoryInfo[game.names.international] || {};
+                categoryInfo[game.names.international][url.description] = {
+                    misc: category.miscellaneous,
+                    wr: null,
+                };
+
                 console.log("Loading leaderboards for: " + game.names.international + " -- " + url.description);
 
                 let loadedUrl = url.url;
@@ -277,10 +329,23 @@ try {
 
                 let runs = (await enqueueRequest(loadedUrl)).data.runs;
 
+                let wrPlace = 1;
+
                 for (let run of runs) {
 
                     if (!run.run.status || run.run.status.status !== "verified") {
                         continue;
+                    }
+
+                    if (run.place === wrPlace) {
+                        if (emulatorHidden && run.run.system.platform.emulated) {
+                            ++wrPlace;
+                        } else {
+                            categoryInfo[game.names.international][url.description].wr = {
+                                run: run,
+                                runners: await loadRunRunners(run),
+                            };
+                        }
                     }
 
                     let date = new Date(run.run.date);
@@ -309,9 +374,10 @@ try {
                     results[game.names.international] = results[game.names.international] || {};
                     results[game.names.international][url.description] = results[game.names.international][url.description] || [];
 
+
                     let result = {
                         run: run,
-                        runners: [],
+                        runners: await loadRunRunners(run),
                     };
 
                     if (emulatorHidden) {
@@ -319,34 +385,6 @@ try {
                     } else {
                         result.place = run.place;
                     }
-
-                    for (const player of run.run.players) {
-
-                        if (player.rel === "guest") {
-
-                            result.runners.push({
-                                type: "guest",
-                                names: {
-                                    international: player.name,
-                                }
-                            });
-
-                        } else {
-                            if (!runners[player.id]) {
-                                runners[player.id] = (await enqueueRequest(player.uri)).data;
-
-                                console.log("Retrieved runner data: " + runners[player.id].names.international);
-
-                            } else {
-                                console.log("Backed up runner data: " + runners[player.id].names.international);
-
-                            }
-
-                            result.runners.push(runners[player.id]);
-                        }
-
-                    }
-
                     results[game.names.international][url.description].push(result);
 
                 }
@@ -425,7 +463,29 @@ try {
             if (!results[game].hasOwnProperty(category)) {
                 continue;
             }
-            html+= "<tr><td class='align-middle' colspan='7' style='padding: 20px 15px;'><strong>" + escapeHtml(category) + "</strong></td></tr>\n";
+            html+= "<tr><td class='align-middle' colspan='5' style='padding: 20px 15px;'><strong>" + escapeHtml(category) + "</strong>";
+            if (categoryInfo[game][category].misc) {
+                html+= " (Misc)";
+            }
+            html+= "</td>";
+
+            html+= "<td style='text-align: right; vertical-align: bottom; font-size: 0.9em;'>WR is <strong>" + secondsToTimeExpression(categoryInfo[game][category].wr.run.run.times.primary_t) + "</strong> by ";
+
+            for (let i = 0; i < categoryInfo[game][category].wr.runners.length; ++i) {
+                let runner = categoryInfo[game][category].wr.runners[i];
+
+                if (runner.type === "guest") {
+                    html+=  runner.names.international;
+                } else {
+                    html += "<a href='" + runner.weblink + "'>" + (runner.names.international || runner.names.japanese) + "</a>";
+
+                    if (i < runners.length - 1) {
+                        html+= ", ";
+                    }
+                }
+            }
+
+            html+= "</tr>\n";
 
             for (let i = 0; i < results[game][category].length; ++i) {
                 let result = results[game][category][i];
@@ -484,8 +544,10 @@ try {
                 html+= "</tr>\n";
             }
         }
-        html+= "</tbody></table></body></html>";
+        html+= "</tbody></table>";
     }
+
+    html+= "</div></body></html>";
 
 
     fs.writeFileSync("./output.html", html);
