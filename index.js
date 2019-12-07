@@ -1,13 +1,13 @@
 
 // Format: YEAR, MONTH, DAY, (HOUR, MINUTE, SECOND)
 // Remember: MONTH starts at 0 for January!
-let dateLimit = new Date(2019, 9, 5);
+let dateLimit = new Date(2019, 11, 5);
 
 // PMD Category extensions take forever to load.
 // Set this to "true" or "false" to enable or disable loading those.
 let includePmdCategoryExtensions = false;
 
-
+let hardDateLimit = new Date(2019, 9, 5);
 
 let mainSeriesUrl = "https://www.speedrun.com/api/v1/series/pokemon/games?_bulk=yes&orderby=released";
 let fanGamesSeriesUrl = "https://www.speedrun.com/api/v1/series/pkmnfangames/games?_bulk=yes&orderby=released";
@@ -354,7 +354,9 @@ try {
 
                     let addRunToList = false;
 
-                    if (date > dateLimit || submittedDate > dateLimit) {
+                    if (date < hardDateLimit) {
+                        addRunToList = false
+                    } else if (date > dateLimit || submittedDate > dateLimit) {
                         addRunToList = true;
                     } else if (run.run.status["verify-date"]) {
                         let verifyDate = new Date(run.run.status["verify-date"]);
