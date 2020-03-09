@@ -19,6 +19,7 @@ let categoryExtensions = [
     {id: "pkmngen5ext", names: {international: "Pokémon BW/B2W2Category Extensions"}, abbreviation: "pkmngen5ext", weblink: "https://www.speedrun.com/pkmngen5ext"},
     {id: "pkmngen6ext", names: {international: "Pokémon XY/ORAS Category Extensions"}, abbreviation: "pkmngen6ext", weblink: "https://www.speedrun.com/pkmngen6ext"},
     {id: "pkmngen7ext", names: {international: "Pokémon SM/USUM/LGPE Category Extensions"}, abbreviation: "pkmngen7ext", weblink: "https://www.speedrun.com/pkmngen7ext"},
+    {id: "pkmngen8ext", names: {international: "Pokémon SWSH Category Extensions"}, abbreviation: "pkmngen8ext", weblink: "https://www.speedrun.com/pkmngen8ext"},
 ];
 
 
@@ -73,6 +74,7 @@ let gamesWithEmulatorBanned = [
     "lde39vl6", // Pokémon Ultra Sun/Ultra Moon
     "j1llzoz1", // Pokémon Let's Go Pikachu/Eevee
     "v1povxm6", // Pokémon Uranium
+    "pkmngen8ext", // Pokémon SWSH Category Extensions
 ];
 
 
