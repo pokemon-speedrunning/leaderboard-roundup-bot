@@ -1,7 +1,7 @@
 
 // Format: YEAR, MONTH, DAY, (HOUR, MINUTE, SECOND)
 // Remember: MONTH starts at 0 for January!
-let dateLimit = new Date(2019, 11, 5);
+let dateLimit = new Date(2020, 0, 31);
 
 // PMD Category extensions take forever to load.
 // Set this to "true" or "false" to enable or disable loading those.
@@ -11,6 +11,7 @@ let hardDateLimit = new Date(2019, 9, 5);
 
 let mainSeriesUrl = "https://www.speedrun.com/api/v1/series/pokemon/games?_bulk=yes&orderby=released";
 let fanGamesSeriesUrl = "https://www.speedrun.com/api/v1/series/pkmnfangames/games?_bulk=yes&orderby=released";
+let pokkenGamesSeriesUrl = "https://www.speedrun.com/api/v1/series/pokken_tournament_series/games?_bulk=yes&orderby=released";
 let categoryExtensions = [
     {id: "pkmnrbyext", names: {international: "Pokémon RBY Category Extensions "}, abbreviation: "pkmnrbyext", weblink: "https://www.speedrun.com/pkmnrbyext"},
     {id: "pkmngscext", names: {international: "Pokémon GSC Category Extensions"}, abbreviation: "pkmngscext", weblink: "https://www.speedrun.com/pkmngscext"},
@@ -245,6 +246,12 @@ try {
     console.log("Loaded " + fanGames.length + " games from Pokémon Fan Games series.");
 
     games = games.concat(fanGames);
+
+    let pokkenGames = (await enqueueRequest(pokkenGamesSeriesUrl)).data;
+
+    console.log("Loaded " + pokkenGames.length + " games from Pokkén Tournament series.");
+
+    games = games.concat(pokkenGames);
 
     let categoryInfo = {};
 
